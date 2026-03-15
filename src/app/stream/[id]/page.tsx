@@ -16,13 +16,13 @@ import Navbar from '@/components/Navbar';
 import ChatPanel from '@/components/ChatPanel';
 import VideoPlayer from '@/components/VideoPlayer';
 import { Stream, ChatMessage } from '@/types';
+import { useAuth } from '@/lib/auth';
 import { formatDistanceToNow } from 'date-fns';
-
-const DEMO_USER = { id: 'user-demo', username: 'Guest_' + Math.floor(Math.random() * 9999) };
 
 export default function StreamPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const [stream, setStream] = useState<Stream | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,6 @@ export default function StreamPage() {
       setMessages([
         { id: '1', streamId: id, userId: 'u1', username: 'StreamFan99', message: 'This is amazing!', timestamp: new Date().toISOString(), type: 'message' },
         { id: '2', streamId: id, userId: 'u2', username: 'CoolViewer', message: 'Love this stream!', timestamp: new Date().toISOString(), type: 'message' },
-        { id: '3', streamId: id, userId: 'u4', username: 'DonationKing', message: 'Keep it up!', timestamp: new Date().toISOString(), type: 'donation', donationAmount: 10 },
       ]);
     }
   }, [id]);
@@ -76,11 +75,14 @@ export default function StreamPage() {
   }, [stream]);
 
   const handleSendMessage = async (msg: string) => {
+    // Only logged-in users can send — guest protection (ChatPanel also enforces this in UI)
+    if (!user) return;
+
     const newMsg: ChatMessage = {
       id: Date.now().toString(),
       streamId: id,
-      userId: DEMO_USER.id,
-      username: DEMO_USER.username,
+      userId: user.id,
+      username: user.username,
       message: msg,
       timestamp: new Date().toISOString(),
       type: 'message',
@@ -127,7 +129,6 @@ export default function StreamPage() {
     );
   }
 
-  // Typed correctly now — no more 'as any'
   const hlsUrl = stream.livepeerHlsUrl || undefined;
 
   return (

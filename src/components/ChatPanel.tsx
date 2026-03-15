@@ -1,14 +1,15 @@
 'use client';
 import {
-  Box, Typography, TextField, IconButton, Avatar, Chip,
-  Divider, Paper, InputAdornment,
+  Box, Typography, IconButton, Avatar,
+  TextField, InputAdornment, Button,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import EmojiEmotionsOutlinedIcon from '@mui/icons-material/EmojiEmotionsOutlined';
 import DiamondOutlinedIcon from '@mui/icons-material/DiamondOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { ChatMessage } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '@/lib/auth';
 
 interface Props {
   streamId: string;
@@ -25,6 +26,7 @@ function getColor(userId: string) {
 }
 
 export default function ChatPanel({ streamId, messages, onSend }: Props) {
+  const { user } = useAuth();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +35,7 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
   }, [messages]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !user) return;
     onSend(input.trim());
     setInput('');
   };
@@ -74,13 +76,7 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
                   {msg.username} {msg.type === 'join' ? 'joined the stream' : 'left the stream'}
                 </Typography>
               ) : msg.type === 'donation' ? (
-                <Box
-                  sx={{
-                    my: 0.5, p: 1, borderRadius: 1.5,
-                    background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(236,72,153,0.2))',
-                    border: '1px solid rgba(124,58,237,0.3)',
-                  }}
-                >
+                <Box sx={{ my: 0.5, p: 1, borderRadius: 1.5, background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(236,72,153,0.2))', border: '1px solid rgba(124,58,237,0.3)' }}>
                   <Typography variant="caption" sx={{ color: '#F9A8D4', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <DiamondOutlinedIcon sx={{ fontSize: 14 }} /> {msg.username} donated ${msg.donationAmount}!
                   </Typography>
@@ -92,12 +88,7 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
                     {msg.username[0]?.toUpperCase()}
                   </Avatar>
                   <Box>
-                    <Typography
-                      component="span"
-                      variant="caption"
-                      fontWeight={700}
-                      sx={{ color: getColor(msg.userId), mr: 0.75 }}
-                    >
+                    <Typography component="span" variant="caption" fontWeight={700} sx={{ color: getColor(msg.userId), mr: 0.75 }}>
                       {msg.username}
                     </Typography>
                     <Typography component="span" variant="caption" sx={{ color: 'text.primary' }}>
@@ -112,32 +103,65 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
         <div ref={bottomRef} />
       </Box>
 
-      {/* Input */}
+      {/* Input area */}
       <Box sx={{ p: 1.5, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Send a message..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={handleSend} disabled={!input.trim()}
-                  sx={{ color: input.trim() ? 'primary.main' : 'text.disabled' }}>
-                  <SendIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              fontSize: '0.85rem',
-            },
-          }}
-        />
+        {user ? (
+          // Logged in — show chat input
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Send a message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={handleSend} disabled={!input.trim()}
+                    sx={{ color: input.trim() ? 'primary.main' : 'text.disabled' }}>
+                    <SendIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.04)', fontSize: '0.85rem' } }}
+          />
+        ) : (
+          // Guest — locked, show sign in prompt
+          <Box
+            sx={{
+              textAlign: 'center', py: 1.5, px: 1,
+              backgroundColor: 'rgba(124,58,237,0.06)',
+              border: '1px solid rgba(124,58,237,0.15)',
+              borderRadius: 2,
+            }}
+          >
+            <LockOutlinedIcon sx={{ fontSize: 20, color: '#A78BFA', mb: 0.5 }} />
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+              Sign in to join the chat
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+              <Button
+                component={Link}
+                href="/login"
+                size="small"
+                variant="outlined"
+                sx={{ fontSize: '0.72rem', borderColor: 'rgba(124,58,237,0.4)', color: '#A78BFA', py: 0.5 }}
+              >
+                Sign In
+              </Button>
+              <Button
+                component={Link}
+                href="/register"
+                size="small"
+                variant="contained"
+                sx={{ fontSize: '0.72rem', py: 0.5 }}
+              >
+                Sign Up
+              </Button>
+            </Box>
+          </Box>
+        )}
       </Box>
     </Box>
   );
