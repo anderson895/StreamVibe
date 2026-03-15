@@ -75,7 +75,6 @@ export default function StreamPage() {
   }, [stream]);
 
   const handleSendMessage = async (msg: string) => {
-    // Only logged-in users can send — guest protection (ChatPanel also enforces this in UI)
     if (!user) return;
 
     const newMsg: ChatMessage = {
@@ -83,6 +82,7 @@ export default function StreamPage() {
       streamId: id,
       userId: user.id,
       username: user.username,
+      avatar: user.avatar || '',   // ← always use current avatar from auth context
       message: msg,
       timestamp: new Date().toISOString(),
       type: 'message',
