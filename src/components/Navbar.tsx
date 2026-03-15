@@ -73,7 +73,7 @@ export default function Navbar() {
                       <DashboardOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                       Dashboard
                     </MenuItem>
-                    <MenuItem onClick={() => setAnchorEl(null)} sx={{ gap: 1.5, py: 1 }}>
+                    <MenuItem component={Link} href="/profile" onClick={() => setAnchorEl(null)} sx={{ gap: 1.5, py: 1 }}>
                       <PersonOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                       My Profile
                     </MenuItem>
