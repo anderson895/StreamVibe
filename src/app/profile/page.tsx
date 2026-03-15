@@ -25,7 +25,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, loading: authLoading, login } = useAuth();
+  const { user, loading: authLoading, updateUser } = useAuth();
   const [myStreams, setMyStreams] = useState<Stream[]>([]);
   const [streamsLoading, setStreamsLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -71,15 +71,15 @@ export default function ProfilePage() {
         setSnackbar({ open: true, message: data.error || 'Failed to save', severity: 'error' });
         return;
       }
-      // Update localStorage session with new user data
-      localStorage.setItem('streamvibe_user', JSON.stringify(data.user));
-      // Force re-read by reloading auth context — simplest: reload page
-      window.location.reload();
+      // Update auth context + localStorage instantly — no reload needed
+      updateUser(data.user);
+      setForm({ username: data.user.username, bio: data.user.bio || '', avatar: data.user.avatar || '' });
+      setSnackbar({ open: true, message: 'Profile updated!', severity: 'success' });
+      setEditing(false);
     } catch {
       setSnackbar({ open: true, message: 'Failed to save changes', severity: 'error' });
     } finally {
       setSaving(false);
-      setEditing(false);
     }
   }
 
@@ -187,16 +187,22 @@ export default function ProfilePage() {
                 </Grid>
                 <Grid item xs={12}>
                   <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>Profile Picture</Typography>
+                  {/* Preview new avatar immediately after upload */}
+                  {form.avatar && (
+                    <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar src={form.avatar} sx={{ width: 56, height: 56, background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}>
+                        {user.username[0]?.toUpperCase()}
+                      </Avatar>
+                      <Typography variant="caption" sx={{ color: '#6EE7B7' }}>
+                        ✓ New photo ready — click Save Changes to apply
+                      </Typography>
+                    </Box>
+                  )}
                   <CloudinaryUploader
                     type="image"
                     label="Upload profile picture"
                     onUpload={(result) => setForm({ ...form, avatar: result.url })}
                   />
-                  {form.avatar && (
-                    <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
-                      ✓ New photo selected
-                    </Typography>
-                  )}
                 </Grid>
               </Grid>
             ) : (

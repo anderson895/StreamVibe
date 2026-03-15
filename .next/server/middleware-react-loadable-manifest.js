@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"components\\\\VideoPlayer.tsx -> hls.js\":{\"id\":\"components\\\\VideoPlayer.tsx -> hls.js\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_hls_js_dist_hls_mjs.js\"]}}"

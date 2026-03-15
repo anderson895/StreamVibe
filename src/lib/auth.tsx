@@ -6,6 +6,7 @@ export interface AuthUser {
   username: string;
   email: string;
   avatar?: string;
+  bio?: string;
   isStreamer: boolean;
   createdAt: string;
 }
@@ -16,6 +17,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ error?: string }>;
   register: (username: string, email: string, password: string) => Promise<{ error?: string }>;
   logout: () => void;
+  updateUser: (updated: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -27,7 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load session from localStorage on mount
     try {
       const stored = localStorage.getItem(SESSION_KEY);
       if (stored) setUser(JSON.parse(stored));
@@ -74,8 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(SESSION_KEY);
   }
 
+  // Update user in both state and localStorage — no page reload needed
+  function updateUser(updated: AuthUser) {
+    setUser(updated);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
