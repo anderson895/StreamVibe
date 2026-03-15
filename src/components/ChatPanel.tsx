@@ -40,6 +40,18 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
     setInput('');
   };
 
+  // Resolve the correct avatar for a message:
+  // If it's the current user's message, always use the live avatar from auth context
+  // so it updates immediately when profile picture changes — no stale Redis data
+  function getAvatar(msg: ChatMessage): string {
+    if (user && msg.userId === user.id) return user.avatar || '';
+    return msg.avatar || '';
+  }
+
+  function getInitial(msg: ChatMessage): string {
+    return msg.username[0]?.toUpperCase() || '?';
+  }
+
   return (
     <Box
       sx={{
@@ -84,8 +96,11 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
                 </Box>
               ) : (
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', py: 0.25 }}>
-                  <Avatar src={msg.avatar} sx={{ width: 22, height: 22, fontSize: '0.65rem', flexShrink: 0 }}>
-                    {msg.username[0]?.toUpperCase()}
+                  <Avatar
+                    src={getAvatar(msg)}
+                    sx={{ width: 22, height: 22, fontSize: '0.65rem', flexShrink: 0 }}
+                  >
+                    {getInitial(msg)}
                   </Avatar>
                   <Box>
                     <Typography component="span" variant="caption" fontWeight={700} sx={{ color: getColor(msg.userId), mr: 0.75 }}>
@@ -106,7 +121,6 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
       {/* Input area */}
       <Box sx={{ p: 1.5, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         {user ? (
-          // Logged in — show chat input
           <TextField
             fullWidth
             size="small"
@@ -127,7 +141,6 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
             sx={{ '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(255,255,255,0.04)', fontSize: '0.85rem' } }}
           />
         ) : (
-          // Guest — locked, show sign in prompt
           <Box
             sx={{
               textAlign: 'center', py: 1.5, px: 1,
@@ -141,22 +154,12 @@ export default function ChatPanel({ streamId, messages, onSend }: Props) {
               Sign in to join the chat
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-              <Button
-                component={Link}
-                href="/login"
-                size="small"
-                variant="outlined"
-                sx={{ fontSize: '0.72rem', borderColor: 'rgba(124,58,237,0.4)', color: '#A78BFA', py: 0.5 }}
-              >
+              <Button component={Link} href="/login" size="small" variant="outlined"
+                sx={{ fontSize: '0.72rem', borderColor: 'rgba(124,58,237,0.4)', color: '#A78BFA', py: 0.5 }}>
                 Sign In
               </Button>
-              <Button
-                component={Link}
-                href="/register"
-                size="small"
-                variant="contained"
-                sx={{ fontSize: '0.72rem', py: 0.5 }}
-              >
+              <Button component={Link} href="/register" size="small" variant="contained"
+                sx={{ fontSize: '0.72rem', py: 0.5 }}>
                 Sign Up
               </Button>
             </Box>
